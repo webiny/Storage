@@ -10,7 +10,6 @@ namespace Webiny\Component\Storage\Driver\Local;
 use Webiny\Component\Storage\Driver\DriverInterface;
 use Webiny\Component\Storage\Driver\AbsolutePathInterface;
 use Webiny\Component\Storage\Driver\DirectoryAwareInterface;
-use Webiny\Component\Storage\Driver\Local\LocalHelper;
 use Webiny\Component\Storage\Driver\SizeAwareInterface;
 use Webiny\Component\Storage\Driver\TouchableInterface;
 use Webiny\Component\Storage\StorageException;
@@ -19,7 +18,7 @@ use Webiny\Component\StdLib\StdObject\StringObject\StringObject;
 /**
  * Local storage
  *
- * @package   Webiny\Bridge\Storage\Driver\Local
+ * @package   Webiny\Component\Storage\Driver\Local
  */
 class Local implements DirectoryAwareInterface, DriverInterface, SizeAwareInterface, AbsolutePathInterface, TouchableInterface
 {
@@ -148,7 +147,13 @@ class Local implements DirectoryAwareInterface, DriverInterface, SizeAwareInterf
 
 
     /**
-     * @inheritdoc
+     * Returns an array of all keys (files and directories)
+     *
+     * @param string   $key       (Optional) Key of a directory to get keys from. If not set - keys will be read from the storage root.
+     *
+     * @param bool|int $recursive (Optional) Read all items recursively. Pass integer value to specify recursion depth.
+     *
+     * @return array
      */
     public function getKeys($key = '', $recursive = false)
     {
@@ -164,7 +169,13 @@ class Local implements DirectoryAwareInterface, DriverInterface, SizeAwareInterf
 
         if ($recursive) {
             try {
-                $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::UNIX_PATHS));
+                $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path,
+                                                                                           \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::UNIX_PATHS
+                                                           )
+                );
+                if ($recursive > -1) {
+                    $iterator->setMaxDepth($recursive);
+                }
             } catch (\Exception $e) {
                 $iterator = new \EmptyIterator;
             }
@@ -250,9 +261,10 @@ class Local implements DirectoryAwareInterface, DriverInterface, SizeAwareInterf
         $path = $this->_helper->buildPath($key, $this->_directory, $this->_create);
         if (strpos($path, $this->_directory) !== 0) {
             throw new StorageException(StorageException::PATH_IS_OUT_OF_STORAGE_ROOT, [
-                $path,
-                $this->_directory
-            ]);
+                    $path,
+                    $this->_directory
+                ]
+            );
         }
 
         return $path;

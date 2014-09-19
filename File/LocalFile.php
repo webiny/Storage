@@ -13,7 +13,7 @@ use Webiny\Component\StdLib\StdObjectTrait;
 /**
  * LocalFile is used for local disk storage
  *
- * @package   Webiny\Component\Storage
+ * @package  Webiny\Component\Storage\File
  */
 class LocalFile extends File
 {

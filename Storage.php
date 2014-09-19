@@ -208,9 +208,10 @@ class Storage
             return $this->_driver->getAbsolutePath($key);
         }
         throw new StorageException(StorageException::DRIVER_DOES_NOT_SUPPORT_ABSOLUTE_PATHS, [
-            get_class($this->_driver
-            )
-        ]);
+                get_class($this->_driver
+                )
+            ]
+        );
     }
 
     public function getRecentKey()

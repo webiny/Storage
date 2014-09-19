@@ -10,7 +10,7 @@ namespace Webiny\Component\Storage\Driver;
 /**
  * DriverInterface
  *
- * @package   Webiny\Bridge\Storage
+ * @package   Webiny\Component\Storage\Driver
  */
 
 interface DriverInterface
@@ -48,9 +48,9 @@ interface DriverInterface
      *
      * For storages that do not support directories, both parameters are irrelevant.
      *
-     * @param string $key       (Optional) Key of a directory to get keys from. If not set - keys will be read from the storage root.
+     * @param string   $key       (Optional) Key of a directory to get keys from. If not set - keys will be read from the storage root.
      *
-     * @param bool   $recursive (Optional) Read all items recursively
+     * @param bool|int $recursive (Optional) Read all items recursively. Pass integer value to specify recursion depth.
      *
      * @return array
      */
