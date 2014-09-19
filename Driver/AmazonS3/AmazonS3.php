@@ -21,10 +21,7 @@ use Webiny\Component\StdLib\StdObject\StringObject\StringObject;
  *   ntpdate -u 0.amazon.pool.ntp.org
  *   ntpdate -d 0.amazon.pool.ntp.org
  *
- * @TODO      :
- * - create exceptions (NoSuchKeyException)
- *
- * @package   Webiny\Bridge\Storage\Driver\AmazonS3
+ * @package  Webiny\Component\Storage\Driver\AmazonS3
  */
 class AmazonS3 implements DriverInterface
 {
@@ -51,7 +48,7 @@ class AmazonS3 implements DriverInterface
      */
     public function __construct($accessKeyId, $secretAccessKey, $bucket, $dateFolderStructure = false)
     {
-        $this->_s3Client = new S3($accessKeyId, $secretAccessKey);
+        $this->_s3Client = new \Webiny\Component\Amazon\S3($accessKeyId, $secretAccessKey);
 
         $this->_bucket = $bucket;
         $this->_dateFolderStructure = $dateFolderStructure;
@@ -107,8 +104,7 @@ class AmazonS3 implements DriverInterface
         if ($this->_dateFolderStructure) {
             if (!$this->keyExists($key)) {
                 $key = new StringObject($key);
-                $key = date('Y' . DIRECTORY_SEPARATOR . 'm' . DIRECTORY_SEPARATOR . 'd'
-                    ) . DIRECTORY_SEPARATOR . $key->trimLeft(DIRECTORY_SEPARATOR);
+                $key = date('Y/m/d') . '/' . $key->trimLeft('/');
             }
         }
         $this->_recentKey = $key;

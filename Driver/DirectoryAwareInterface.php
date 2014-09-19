@@ -8,7 +8,7 @@
 namespace Webiny\Component\Storage\Driver;
 
 /**
- * @package   Webiny\Component\Storage
+ * @package   Webiny\Component\Storage\Driver
  */
 
 interface DirectoryAwareInterface
