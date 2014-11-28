@@ -10,7 +10,7 @@ The best way to install the component is using Composer.
 ```json
 {
     "require": {
-        "webiny/storage": "1.0.*"
+        "webiny/storage": "1.1.*"
     }
 }
 ```
@@ -53,6 +53,7 @@ Storage:
             - yourSecretAccessKey
             - webiny # Bucket name
             - false # Date folder structure
+            - http://d47gcb3uej2zar.cloudfront.net # CDN domain
     Services:
         LocalStorage:
             Class: %Storage.Class%
