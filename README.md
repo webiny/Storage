@@ -7,22 +7,10 @@ Install the component
 ---------------------
 The best way to install the component is using Composer.
 
-```json
-{
-    "require": {
-        "webiny/storage": "1.1.*"
-    }
-}
+```bash
+composer require webiny/storage
 ```
 For additional versions of the package, visit the [Packagist page](https://packagist.org/packages/webiny/storage).
-
-Once you have your `composer.json` file in place, just run the install command.
-
-    $ php composer.phar install
-
-To learn more about Composer, and how to use it, please visit [this link](https://getcomposer.org/doc/01-basic-usage.md).
-
-Alternatively, you can also do a `git checkout` of the repo.
 
 ## Usage
 
@@ -42,6 +30,7 @@ The following driver interfaces are available:
 ## Configuring a storage service
 
 The recommended way of using a storage is by defining a storage service. Here is an example of defining a service using `Local` and `AmazonS3` storage driver:
+NOTE: you can use __DIR__ to have your file paths built dynamicallyd. __DIR__ will be replaced with the directory path containing current config file.
 
 ```yaml
 Storage:
@@ -61,7 +50,7 @@ Storage:
                 Driver:
                     Object: \Webiny\Component\Storage\Driver\Local\Local
                     ObjectArguments:
-                        - /var/www/projects/webiny/Public/Uploads # Absolute root path
+                        - __DIR__/../../Public/Uploads # Absolute root path
                         - http://admin.w3.com/Uploads # Web root path
                         - false # DateFolderStructure
                         - true # Create folder if it doesn't exist

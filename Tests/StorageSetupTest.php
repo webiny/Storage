@@ -15,7 +15,7 @@ class StorageSetupTest extends \PHPUnit_Framework_TestCase
 
     public function testSetConfig()
     {
-        Storage::setConfig(realpath(__DIR__ . '/' . self::CONFIG));
+        Storage::setConfig(realpath(__DIR__). self::CONFIG);
     }
 
     public function testGetConfig()
@@ -26,7 +26,6 @@ class StorageSetupTest extends \PHPUnit_Framework_TestCase
     public function testConfigServices()
     {
         $this->assertSame('%Storage.Class%', Storage::getConfig()->get('Services.LocalStorage.Class'));
-        $this->assertSame('\Webiny\Component\Amazon\S3', Storage::getConfig()->get('Bridges.AmazonS3'));
         $this->assertFalse(Storage::getConfig()->get('Bridges.FakeBridge', false));
     }
 }

@@ -28,7 +28,7 @@ Storage:
                 Driver:
                     Object: \Webiny\Component\Storage\Driver\Local\Local
                     ObjectArguments:
-                        - /var/www/projects/webiny/Public/Uploads # Absolute root path
+                        - __DIR__/TestFiles # __DIR__ will be replaced with this config's directory
                         - http://admin.w3.com/Uploads # Web root path
                         - false # DateFolderStructure
                         - true # Create folder if it doesn't exist
@@ -38,4 +38,4 @@ Storage:
     # If you don't want to change the default driver,
     # just ommit this definition in your config file.
     Bridges:
-        AmazonS3: \Webiny\Component\Amazon\S3
+        AmazonS3: \Webiny\Component\Storage\Tests\Mocks\S3Mock
