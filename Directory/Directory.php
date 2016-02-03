@@ -9,8 +9,7 @@ namespace Webiny\Component\Storage\Directory;
 
 use Traversable;
 use Webiny\Component\EventManager\EventManagerTrait;
-use Webiny\Component\Storage\Driver\Local\LocalHelper;
-use Webiny\Component\Storage\File\LocalFile;
+use Webiny\Component\Storage\File\File;
 use Webiny\Component\Storage\Storage;
 use Webiny\Component\Storage\StorageException;
 use Webiny\Component\StdLib\StdLibTrait;
@@ -21,15 +20,15 @@ use Webiny\Component\StdLib\StdLibTrait;
  *
  * @package Webiny\Component\Storage\Directory
  */
-class LocalDirectory implements DirectoryInterface, \IteratorAggregate
+class Directory implements DirectoryInterface, \IteratorAggregate
 {
     use StdLibTrait, EventManagerTrait;
 
-    protected $_key;
-    protected $_storage;
-    protected $_recursive;
-    protected $_items;
-    protected $_regex;
+    protected $key;
+    protected $storage;
+    protected $recursive;
+    protected $items;
+    protected $regex;
 
     /**
      * Constructor
@@ -44,15 +43,20 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
      */
     public function __construct($key, Storage $storage, $recursive = false, $filter = null)
     {
-        $this->_key = $key;
-        $this->_recursive = $recursive;
-        $this->_storage = $storage;
+        if(!$storage->supportsDirectories()){
+            $driver = get_class($storage->getDriver());
+            throw new StorageException(StorageException::DRIVER_CAN_NOT_WORK_WITH_DIRECTORIES, [$driver]);
+        }
 
-        if ($this->_storage->keyExists($key) && !$this->_storage->isDirectory($key)) {
+        $this->key = $key;
+        $this->recursive = $recursive;
+        $this->storage = $storage;
+
+        if ($this->storage->keyExists($key) && !$this->storage->isDirectory($key)) {
             throw new StorageException(StorageException::DIRECTORY_OBJECT_CAN_NOT_READ_FILE_PATHS, [$key]);
         }
 
-        $this->_parseFilter($filter);
+        $this->parseFilter($filter);
     }
 
     /**
@@ -66,11 +70,11 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
      *
      * @param string $condition
      *
-     * @return LocalDirectory
+     * @return Directory
      */
     public function filter($condition)
     {
-        return new static($this->_key, $this->_storage, $this->_recursive, $condition);
+        return new static($this->key, $this->storage, $this->recursive, $condition);
     }
 
     /**
@@ -80,9 +84,9 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
      */
     public function count()
     {
-        $this->_loadItems();
+        $this->loadItems();
 
-        return count($this->_items);
+        return count($this->items);
     }
 
     /**
@@ -94,9 +98,9 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
      */
     public function getIterator()
     {
-        $this->_loadItems();
+        $this->loadItems();
 
-        return new \ArrayIterator($this->_items);
+        return new \ArrayIterator($this->items);
     }
 
     /**
@@ -106,7 +110,7 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
      */
     public function getStorage()
     {
-        return $this->_storage;
+        return $this->storage;
     }
 
     /**
@@ -116,10 +120,20 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
      */
     public function getKey()
     {
-        return $this->_key;
+        return $this->key;
     }
 
-    protected function _parseFilter($filter)
+    /**
+     * Get absolute folder path
+     *
+     * @return string
+     */
+    public function getAbsolutePath()
+    {
+        return $this->storage->getAbsolutePath($this->key);
+    }
+
+    protected function parseFilter($filter)
     {
         if (empty($filter)) {
             return;
@@ -127,35 +141,35 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
         $filter = $this->str($filter);
         if ($filter->startsWith('*')) {
             $filter->replace('.', '\.');
-            $this->_regex = '/(\S+)' . $filter . '/';
+            $this->regex = '/(\S+)' . $filter . '/';
         } elseif ($filter->endsWith('*')) {
             $filter->replace('.', '\.');
-            $this->_regex = '/' . $filter . '(\S+)/';
+            $this->regex = '/' . $filter . '(\S+)/';
         } else {
-            $this->_regex = $filter;
+            $this->regex = $filter;
         }
     }
 
-    protected function _loadItems()
+    protected function loadItems()
     {
-        if ($this->_items === null) {
-            $keys = $this->_storage->getKeys($this->_key, $this->_recursive);
+        if ($this->items === null) {
+            $keys = $this->storage->getKeys($this->key, $this->recursive);
 
             // Filter keys if regex is set
-            if ($this->_regex) {
+            if ($this->regex) {
                 foreach ($keys as $k => $v) {
-                    if (!preg_match($this->_regex, $v)) {
+                    if (!preg_match($this->regex, $v)) {
                         unset($keys[$k]);
                     }
                 }
             }
             // Instantiate files/directories
-            $this->_items = [];
+            $this->items = [];
             foreach ($keys as $key) {
-                if ($this->_storage->isDirectory($key)) {
-                    $this->_items[$key] = new static($key, $this->_storage);
+                if ($this->storage->isDirectory($key)) {
+                    $this->items[$key] = new static($key, $this->storage);
                 } else {
-                    $this->_items[$key] = new LocalFile($key, $this->_storage);
+                    $this->items[$key] = new File($key, $this->storage);
                 }
             }
         }
@@ -170,17 +184,17 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
             $this->eventManager()->disable();
         }
         /**
-         * If directory was loaded recursively, we do not have the subdirectories in $this->_items.
+         * If directory was loaded recursively, we do not have the subdirectories in $this->items.
          * We need to reset the items and load directory non-recursively.
          */
 
-        if ($this->_recursive) {
-            $this->_items = null;
-            $this->_recursive = false;
+        if ($this->recursive) {
+            $this->items = null;
+            $this->recursive = false;
         }
 
-        $this->_loadItems();
-        foreach ($this->_items as $item) {
+        $this->loadItems();
+        foreach ($this->items as $item) {
             $item->delete();
         }
 
@@ -188,7 +202,7 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
             $this->eventManager()->enable();
         }
 
-        return $this->_storage->deleteKey($this->_key);
+        return $this->storage->deleteKey($this->key);
     }
 
     /**
@@ -200,8 +214,8 @@ class LocalDirectory implements DirectoryInterface, \IteratorAggregate
     public function getSize()
     {
         $size = 0;
-        $this->_loadItems();
-        foreach ($this->_items as $item) {
+        $this->loadItems();
+        foreach ($this->items as $item) {
             $size += $item->getSize();
         }
 

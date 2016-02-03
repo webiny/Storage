@@ -16,7 +16,7 @@ For additional versions of the package, visit the [Packagist page](https://packa
 
 You will need to use storage drivers to access different storage providers like local disk, Amazon, Rackspace, etc.
 
-Webiny Framework provides `Local` and `AmazonS3` storage driver but using a set of built-in interfaces will help you to develop a new driver in no time.
+Webiny Framework provides `LocalStorageDriver` and `S3StorageDriver` but using a set of built-in interfaces will help you to develop a new driver in no time.
 
 The following driver interfaces are available:
 
@@ -29,8 +29,8 @@ The following driver interfaces are available:
 
 ## Configuring a storage service
 
-The recommended way of using a storage is by defining a storage service. Here is an example of defining a service using `Local` and `AmazonS3` storage driver:
-NOTE: you can use __DIR__ to have your file paths built dynamicallyd. __DIR__ will be replaced with the directory path containing current config file.
+The recommended way of using a storage is by defining a storage service. Here is an example of defining a service using `LocalStorageDriver` and `S3StorageDriver`:
+NOTE: you can use __DIR__ to have your file paths built dynamically. __DIR__ will be replaced with the directory path containing current config file.
 
 ```yaml
 Storage:
@@ -48,7 +48,7 @@ Storage:
             Class: %Storage.Class%
             Arguments:
                 Driver:
-                    Object: \Webiny\Component\Storage\Driver\Local\Local
+                    Object: \Webiny\Component\Storage\Driver\Local\LocalStorageDriver
                     ObjectArguments:
                         - __DIR__/../../Public/Uploads # Absolute root path
                         - http://admin.w3.com/Uploads # Web root path
@@ -58,7 +58,7 @@ Storage:
             Class: %Storage.Class%
             Arguments:
                 Driver:
-                    Object: \Webiny\Component\Storage\Driver\AmazonS3\AmazonS3
+                    Object: \Webiny\Component\Storage\Driver\AmazonS3\S3StorageDriver
                     ObjectArguments: %Storage.S3DriverArgs%
             Tags: [cloud]
 
@@ -68,18 +68,18 @@ Storage:
 
 ## Using your new storage
 
-To make use of local storage easier and more flexible, there are 2 classes: `\Webiny\Component\Storage\File\LocalFile` and `\Webiny\Component\Storage\Directory\LocalDirectory`. These 2 classes serve as wrappers so you never need to make calls to storage directly. Besides, they contain common methods you will need to perform actions on files and directories.
+To make use of local storage easier and more flexible, there are 2 classes: `\Webiny\Component\Storage\File\File` and `\Webiny\Component\Storage\Directory\Directory`. These 2 classes serve as wrappers so you never need to make calls to storage directly. Besides, they contain common methods you will need to perform actions on files and directories.
 
 Let's take a look at how you would store a new file:
 
 ```php
 // use StorageTrait
 
-// Get your storage service. Storage name is part of the service name after 'storage.'
-$storage = $this->storage('local');
+// Get your storage service. Storage name is part of the service name after 'Storage.'
+$storage = $this->storage('LocalStorage');
 
 // Create a file object with a key (file name) and a $storage instance
-$file = new LocalFile('file.txt', $storage);
+$file = new File('file.txt', $storage);
 
 $contents = file_get_contents('http://www.w3schools.com/images/w3schoolslogoNEW310113.gif');
 $file->setContents($contents);
@@ -91,7 +91,7 @@ After calling `setContents($contents)` the contents is written to the storage im
 ## Working with directories
 Sometimes you need to read the whole directory, filter files by name, extension, etc. There is a special interface for this type of manipulation, `\Webiny\Component\Storage\Directory\DirectoryInterface`.
 
-Since not all storage engines support directories, there is no generic implementation of this interface. There is, however, an implementation in form of `LocalDirectory` which works nicely with local file storage. There are 2 modes of reading a directory: `recursive` and `non-recursive`. 
+Since not all storage engines support directories, there is no generic implementation of this interface. There is, however, an implementation in form of `Directory` which works nicely with local file storage. There are 2 modes of reading a directory: `recursive` and `non-recursive`. 
 
 * `Recursive` will read the whole directory structure recursively and build a one-dimensional array of files (directory objects are not created but their children files are returned). This is very useful when you need to read all files at once or filter them by name, extension, etc.
 * `Non-recursive` will only read current directory and return both child `Directory` and `File` objects. You can then loop through child `Directory` object to go in-depth.
@@ -101,17 +101,17 @@ Since not all storage engines support directories, there is no generic implement
 
 ```php
 // Get your storage service
-$storage = $this->storage('local');
+$storage = $this->storage('LocalStorage');
 
 // Create a directory object with a key (directory name), $storage instance
 $dir = new Directory('2013', $storage);
 
 // Loop through directory object
 foreach($dir as $item){
-    if($this->isInstanceOf($item, 'LocalDirectory')){
-		// Do something with child LocalDirectory object
+    if($item->isDirectory()){
+		// Do something with child Directory object
 	} else {
-		// Do something with LocalFile object
+		// Do something with File object
 	}
 }
 
@@ -122,7 +122,7 @@ NOTE: directory files are not being fetched from storage until you actually use 
 ## Filtering files (recursive mode)
 ```php
 // Get your storage service
-$storage = $this->storage('local');
+$storage = $this->storage('LocalStorage');
 
 // Read recursively
 $dir = new Directory('2013', $storage, true);
@@ -147,7 +147,7 @@ NOTE: calling `filter()` does not change the original Directory object, but crea
 
 ```php
 // Get your storage service
-$storage = $this->storage('local');
+$storage = $this->storage('LocalStorage');
 
 // Read recursively and don't filter
 $dir = new Directory('2013', $storage, true);
@@ -174,12 +174,12 @@ foreach($dir as $file){
 Deleting a directory (this is done recursively) is as simple as:
 ```php
 // Get your storage service
-$storage = $this->storage('local');
+$storage = $this->storage('LocalStorage');
 
 // Get directory
 $dir = new Directory('2013', $storage);
 
-// This will delete the whole directory structure and file FILE_DELETED event for each file along the way
+// This will delete the whole directory structure and fire FILE_DELETED event for each file along the way
 $dir->delete();
 
 // If you don't want the events to be fired, pass as second parameter `false`:
