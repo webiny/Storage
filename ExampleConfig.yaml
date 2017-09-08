@@ -10,11 +10,17 @@ Storage:
     Parameters:
         StorageClass: \Webiny\Component\Storage\Storage
         StorageS3DriverArgs:
-            - AAAAAA
-            - /FOO
-            - foo # Bucket name
-            - false # DateFolderStructure
-            - http://d35gcc3uej2xar.cloudfront.net # CDN domain
+            Config:
+                AccessKeyId: AAAAAA
+                SecretAccessKey: /FOO
+                Bucket: foo
+                Region: eu-west-1
+                Endpoint: http://s3.eu-central-1.amazonaws.com
+                CdnDomain: http://d35gcc3uej2xar.cloudfront.net
+                Params:
+                    CacheControl: max-age=64000
+                    Metadata:
+                        key: value
     Services:
         CloudStorage:
             Class: %StorageClass%
@@ -29,7 +35,8 @@ Storage:
                 Driver:
                     Object: \Webiny\Component\Storage\Driver\Local\LocalStorageDriver
                     ObjectArguments:
-                        - __DIR__/../../Public/Uploads # Absolute root path
-                        - http://admin.w3.com/Uploads # Web root path
-                        - false # DateFolderStructure
-                        - true # Create folder if it doesn't exist
+                        Config:
+                            Directory: __DIR__/../../Public/Uploads # Absolute root path
+                            PublicUrl: http://admin.w3.com/Uploads # Web root path
+                            DateFolderStructure: false
+                            Create: true
